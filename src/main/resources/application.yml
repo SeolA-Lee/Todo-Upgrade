@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: todolist
+  datasource:
+    url: //각자 세팅
+    username: //각자 세팅
+    password: //각자 세팅
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: Asia/Seoul
