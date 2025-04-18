@@ -1,5 +1,6 @@
 package com.todolist.exception.handler;
 
+import com.todolist.exception.DuplicateEmailException;
 import com.todolist.exception.UnauthorizedException;
 import com.todolist.exception.dto.ExceptionResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -17,5 +18,13 @@ public class GlobalExceptionHandler {
         ExceptionResponse exceptionResponse = new ExceptionResponse(HttpStatus.UNAUTHORIZED.toString(), e.getMessage());
         log.warn("UnauthorizedExceptionResponse: {}", exceptionResponse);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(exceptionResponse);
+    }
+
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ExceptionResponse> handleDuplicateEmailException(DuplicateEmailException e) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse(HttpStatus.BAD_REQUEST.toString(), e.getMessage());
+        log.warn("DuplicateEmailException 발생");
+        log.warn("status: {}, message: {}", exceptionResponse.status(), exceptionResponse.message());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
     }
 }
