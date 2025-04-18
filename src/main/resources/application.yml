@@ -2,9 +2,7 @@ spring:
   application:
     name: todolist
   datasource:
-    url: //각자 세팅
-    username: //각자 세팅
-    password: //각자 세팅
+    url: jdbc:mysql://localhost:3306/todolist_be
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     generate-ddl: true
@@ -13,5 +11,9 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        highlight_sql: true
         jdbc:
           time_zone: Asia/Seoul
+    show-sql: true
+  config:
+    import: classpath:application-secret.yml
