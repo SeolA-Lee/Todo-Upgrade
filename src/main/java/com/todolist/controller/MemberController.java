@@ -1,5 +1,6 @@
 package com.todolist.controller;
 
+import com.todolist.jwt.dto.JwtToken;
 import com.todolist.service.MemberService;
 import com.todolist.service.dto.request.MemberRequest;
 import com.todolist.service.dto.response.RegisterResponse;
@@ -22,5 +23,11 @@ public class MemberController {
     public ResponseEntity<RegisterResponse> register(@RequestBody MemberRequest request) {
         RegisterResponse response = memberService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<JwtToken> login(@RequestBody MemberRequest request) {
+        JwtToken token = memberService.login(request);
+        return ResponseEntity.status(HttpStatus.OK).body(token);
     }
 }
