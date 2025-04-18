@@ -1,7 +1,7 @@
 package com.todolist.controller;
 
 import com.todolist.service.MemberService;
-import com.todolist.service.dto.request.RegisterRequest;
+import com.todolist.service.dto.request.MemberRequest;
 import com.todolist.service.dto.response.RegisterResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,7 +19,7 @@ public class MemberController {
     private final MemberService memberService;
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponse> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(@RequestBody MemberRequest request) {
         RegisterResponse response = memberService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

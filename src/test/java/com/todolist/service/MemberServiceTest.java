@@ -3,7 +3,7 @@ package com.todolist.service;
 import com.todolist.entity.Member;
 import com.todolist.exception.DuplicateEmailException;
 import com.todolist.repository.MemberRepository;
-import com.todolist.service.dto.request.RegisterRequest;
+import com.todolist.service.dto.request.MemberRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,7 +35,7 @@ class MemberServiceTest {
         String password = "password1234";
         String encodedPassword = "encoded1234";
 
-        RegisterRequest request = new RegisterRequest(email, password);
+        MemberRequest request = new MemberRequest(email, password);
 
         when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
 
@@ -55,7 +55,7 @@ class MemberServiceTest {
         String email = "test@example.com";
         String password = "password1234";
 
-        RegisterRequest request = new RegisterRequest(email, password);
+        MemberRequest request = new MemberRequest(email, password);
 
         when(memberRepository.existsByEmail(email)).thenReturn(true);
 

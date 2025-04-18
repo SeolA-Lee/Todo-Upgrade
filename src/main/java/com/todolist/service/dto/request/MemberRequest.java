@@ -1,6 +1,6 @@
 package com.todolist.service.dto.request;
 
-public record RegisterRequest(
+public record MemberRequest(
         String email,
         String password
 ) {
