@@ -1,6 +1,7 @@
 package com.todolist.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -20,4 +21,10 @@ public class Member {
 
     @Column(nullable = false)
     private String password;
+
+    @Builder
+    public Member(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
 }

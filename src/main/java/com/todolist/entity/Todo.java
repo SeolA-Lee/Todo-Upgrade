@@ -2,6 +2,7 @@ package com.todolist.entity;
 
 import com.todolist.entity.enums.TodoStatus;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -16,7 +17,7 @@ public class Todo {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "member_id")
-    private Member memberId;
+    private Member member;
 
     @Column(nullable = false)
     private String todoList;
@@ -24,4 +25,11 @@ public class Todo {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TodoStatus status = TodoStatus.NOT_STARTED;
+
+    @Builder
+    public Todo(Member member, String todoList, TodoStatus status) {
+        this.member = member;
+        this.todoList = todoList;
+        this.status = status;
+    }
 }
