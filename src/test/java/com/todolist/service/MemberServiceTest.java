@@ -10,7 +10,6 @@ import com.todolist.service.dto.request.MemberRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -88,7 +87,7 @@ class MemberServiceTest {
 
         when(memberRepository.findByEmail(email)).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(password, member.getPassword())).thenReturn(true);
-        when(jwtTokenProvider.createToken(any(UsernamePasswordAuthenticationToken.class)))
+        when(jwtTokenProvider.createToken(any(Member.class)))
                 .thenReturn(new JwtToken("accessToken", "refreshToken"));
 
         // when
