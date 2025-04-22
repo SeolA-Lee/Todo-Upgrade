@@ -5,8 +5,9 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -25,8 +26,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // 2. 토큰 유효성 검사
         if (token != null && jwtTokenProvider.validateToken(token)) {
-            // 유효 시 Authentication 객체를 가지고 와서 SecurityContext에 저장
-            Authentication authentication = jwtTokenProvider.getAuthentication(token);
+
+            UsernamePasswordAuthenticationToken authentication = jwtTokenProvider.getAuthentication(token);
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 

@@ -1,5 +1,6 @@
 package com.todolist.jwt;
 
+import com.todolist.entity.Member;
 import com.todolist.exception.UnauthorizedException;
 import com.todolist.jwt.dto.JwtToken;
 import io.jsonwebtoken.*;
@@ -8,18 +9,11 @@ import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -40,18 +34,16 @@ public class JwtTokenProvider {
     /**
      * Member 정보를 가지고 AccessToken, RefreshToken을 생성
      */
-    public JwtToken createToken(Authentication authentication) {
-        // 권한 가져오기
-        String auth = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(","));
+    public JwtToken createToken(Object payload) {
+
+        Member member = (Member) payload;
 
         long now = new Date().getTime();
 
         // Access Token 생성
         String accessToken = Jwts.builder()
-                .setSubject(authentication.getName())
-                .claim("auth", auth)
+                .claim("id", member.getId())
+                .claim("email", member.getEmail())
                 .setExpiration(new Date(now + JWT_TOKEN_VALID))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
@@ -68,21 +60,10 @@ public class JwtTokenProvider {
     /**
      * JWT 토믄을 복호화하여 토큰에 들어 있는 정보를 꺼내는 메서드
      */
-    public Authentication getAuthentication(String token) {
-
+    public UsernamePasswordAuthenticationToken getAuthentication(String token) {
         Claims claims = parseClaims(token); // JWT 토큰 복호화
-
-        if (claims.get("auth") == null) {
-            throw new UnauthorizedException("권한 정보가 없는 토큰입니다.");
-        }
-
-        // 클레임에서 권한 정보 가져오기
-        Collection<? extends GrantedAuthority> authorities = Arrays.stream(claims.get("auth").toString().split(","))
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
-
-        UserDetails principal = new User(claims.getSubject(), "", authorities);
-        return new UsernamePasswordAuthenticationToken(principal, "", authorities);
+        Long memberId = claims.get("id", Long.class);
+        return new UsernamePasswordAuthenticationToken(memberId, null, Collections.emptyList());
     }
 
     public boolean validateToken(String token) {
@@ -101,7 +82,7 @@ public class JwtTokenProvider {
     private Claims parseClaims(String token) {
         try {
             return Jwts.parserBuilder()
-                    .setSigningKey(key)
+                    .setSigningKey(key.getEncoded())
                     .build()
                     .parseClaimsJws(token)
                     .getBody();

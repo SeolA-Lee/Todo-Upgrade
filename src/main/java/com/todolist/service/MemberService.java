@@ -10,12 +10,9 @@ import com.todolist.service.dto.request.MemberRequest;
 import com.todolist.service.dto.response.RegisterResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Slf4j
 @Service
@@ -57,6 +54,6 @@ public class MemberService {
         }
 
         log.info("로그인 성공: member_id = {}", member.getId());
-        return jwtTokenProvider.createToken(new UsernamePasswordAuthenticationToken(member.getEmail(), null, List.of()));
+        return jwtTokenProvider.createToken(member);
     }
 }
