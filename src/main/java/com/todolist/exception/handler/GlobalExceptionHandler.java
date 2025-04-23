@@ -1,6 +1,7 @@
 package com.todolist.exception.handler;
 
 import com.todolist.exception.DuplicateEmailException;
+import com.todolist.exception.ForbiddenAccessException;
 import com.todolist.exception.UnauthorizedException;
 import com.todolist.exception.dto.ExceptionResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -27,5 +28,13 @@ public class GlobalExceptionHandler {
         log.warn("DuplicateEmailException 발생");
         log.warn("status: {}, message: {}", exceptionResponse.status(), exceptionResponse.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
+    }
+
+    @ExceptionHandler(ForbiddenAccessException.class)
+    public ResponseEntity<ExceptionResponse> handleForbiddenAccessException(ForbiddenAccessException e) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse(HttpStatus.FORBIDDEN.toString(), e.getMessage());
+        log.warn("ForbiddenAccessException 발생");
+        log.warn("status: {}, message: {}", exceptionResponse.status(), exceptionResponse.message());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(exceptionResponse);
     }
 }

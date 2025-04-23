@@ -1,0 +1,29 @@
+package com.todolist.controller;
+
+import com.todolist.auth.user.CustomUserDetails;
+import com.todolist.service.TodoDetailService;
+import com.todolist.service.dto.request.TodoRequest;
+import com.todolist.service.dto.response.TodoDetailResponse;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/todo/{todoId}")
+@RequiredArgsConstructor
+public class TodoDetailController {
+
+    private final TodoDetailService todoDetailService;
+
+    @PostMapping("/detail")
+    public ResponseEntity<TodoDetailResponse> createTodoDetail(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable(name = "todoId") Long todoId,
+            @RequestBody TodoRequest request
+    ) {
+        TodoDetailResponse response = todoDetailService.createTodoDetail(userDetails.member(), todoId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+}
