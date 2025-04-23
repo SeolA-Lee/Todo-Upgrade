@@ -1,4 +1,4 @@
-package com.todolist.jwt;
+package com.todolist.auth.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

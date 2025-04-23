@@ -1,8 +1,10 @@
-package com.todolist.jwt;
+package com.todolist.auth.jwt;
 
+import com.todolist.auth.user.CustomUserService;
 import com.todolist.entity.Member;
 import com.todolist.exception.UnauthorizedException;
-import com.todolist.jwt.dto.JwtToken;
+import com.todolist.auth.jwt.dto.JwtToken;
+import com.todolist.auth.user.CustomUserDetails;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -12,7 +14,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.Collections;
 import java.util.Date;
 
 @Slf4j
@@ -22,13 +23,15 @@ public class JwtTokenProvider {
     private static final long JWT_TOKEN_VALID = 1000 * 60 * 60; // 1시간
 
     private final Key key;
+    private final CustomUserService customUserService;
 
     /**
      * application-secret.yml에서 secret 값을 가져와서 key에 저장
      * @param secretKey
      */
-    public JwtTokenProvider(@Value("${jwt.secret}") String secretKey) {
+    public JwtTokenProvider(@Value("${jwt.secret}") String secretKey, CustomUserService customUserService) {
         this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+        this.customUserService = customUserService;
     }
 
     /**
@@ -63,7 +66,8 @@ public class JwtTokenProvider {
     public UsernamePasswordAuthenticationToken getAuthentication(String token) {
         Claims claims = parseClaims(token); // JWT 토큰 복호화
         Long memberId = claims.get("id", Long.class);
-        return new UsernamePasswordAuthenticationToken(memberId, null, Collections.emptyList());
+        CustomUserDetails userDetails = customUserService.loadUserByUserId(memberId);
+        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 
     public boolean validateToken(String token) {

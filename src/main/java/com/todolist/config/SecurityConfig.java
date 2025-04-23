@@ -2,8 +2,8 @@ package com.todolist.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.todolist.exception.dto.ExceptionResponse;
-import com.todolist.jwt.JwtAuthenticationFilter;
-import com.todolist.jwt.JwtTokenProvider;
+import com.todolist.auth.jwt.JwtAuthenticationFilter;
+import com.todolist.auth.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

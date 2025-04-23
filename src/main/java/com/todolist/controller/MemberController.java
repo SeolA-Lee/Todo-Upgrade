@@ -1,6 +1,6 @@
 package com.todolist.controller;
 
-import com.todolist.jwt.dto.JwtToken;
+import com.todolist.auth.jwt.dto.JwtToken;
 import com.todolist.service.MemberService;
 import com.todolist.service.dto.request.MemberRequest;
 import com.todolist.service.dto.response.RegisterResponse;
