@@ -6,6 +6,7 @@ import com.todolist.entity.TodoDetail;
 import com.todolist.entity.enums.TodoDetailStatus;
 import com.todolist.exception.ForbiddenAccessException;
 import com.todolist.exception.NotFoundException;
+import com.todolist.exception.TodoDetailLimitExceededException;
 import com.todolist.repository.TodoDetailRepository;
 import com.todolist.repository.TodoRepository;
 import com.todolist.service.dto.request.TodoRequest;
@@ -35,7 +36,11 @@ public class TodoDetailService {
             throw new ForbiddenAccessException("해당 목록에 접근 권한이 없습니다.");
         }
 
-        // TODO: 해당 상위 투두의 세부 할 일 개수가 3개가 넘으면 예외
+        // 해당 상위 투두의 세부 할 일 개수가 3개가 넘으면 예외
+        Long count = todoDetailRepository.countByTodoId(parentTodoId);
+        if (count >= 3) {
+            throw new TodoDetailLimitExceededException("세부 할 일은 최대 3개까지만 추가할 수 있습니다.");
+        }
 
         TodoDetail todoDetail = TodoDetail.builder()
                 .todo(parentTodo)

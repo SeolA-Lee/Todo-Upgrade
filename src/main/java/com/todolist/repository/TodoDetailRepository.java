@@ -6,4 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface TodoDetailRepository extends JpaRepository<TodoDetail, Long> {
+
+    Long countByTodoId(Long parentId);
 }
