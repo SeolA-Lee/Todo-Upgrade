@@ -3,8 +3,6 @@ package com.todolist.service;
 import com.todolist.entity.Member;
 import com.todolist.entity.Todo;
 import com.todolist.entity.enums.TodoStatus;
-import com.todolist.exception.NotFoundException;
-import com.todolist.repository.MemberRepository;
 import com.todolist.repository.TodoRepository;
 import com.todolist.service.dto.request.TodoRequest;
 import com.todolist.service.dto.response.TodoResponse;
@@ -19,14 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class TodoService {
 
-    private final MemberRepository memberRepository;
     private final TodoRepository todoRepository;
 
     @Transactional
-    public TodoResponse createTodo(Long memberId, TodoRequest request) {
-        // 사용자 확인
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+    public TodoResponse createTodo(Member member, TodoRequest request) {
 
         Todo todo = Todo.builder()
                 .member(member)

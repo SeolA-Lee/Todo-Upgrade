@@ -1,5 +1,6 @@
 package com.todolist.controller;
 
+import com.todolist.auth.user.CustomUserDetails;
 import com.todolist.service.TodoService;
 import com.todolist.service.dto.request.TodoRequest;
 import com.todolist.service.dto.response.TodoResponse;
@@ -21,10 +22,10 @@ public class TodoController {
 
     @PostMapping
     public ResponseEntity<TodoResponse> createTodo(
-            @AuthenticationPrincipal Long memberId,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody TodoRequest request
     ) {
-        TodoResponse response = todoService.createTodo(memberId, request);
+        TodoResponse response = todoService.createTodo(userDetails.member(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
