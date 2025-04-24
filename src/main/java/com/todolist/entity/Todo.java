@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -29,12 +30,17 @@ public class Todo {
     private TodoStatus status = TodoStatus.NOT_STARTED;
 
     @OneToMany(mappedBy = "todo", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<TodoDetail> todoDetail;
+    private List<TodoDetail> todoDetail = new ArrayList<>();
 
     @Builder
     public Todo(Member member, String todoList, TodoStatus status) {
         this.member = member;
         this.todoList = todoList;
         this.status = status;
+    }
+
+    public void addTodoDetail(TodoDetail todoDetail) {
+        this.todoDetail = new ArrayList<>();
+        todoDetail.setTodo(this);
     }
 }

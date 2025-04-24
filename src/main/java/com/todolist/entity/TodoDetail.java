@@ -2,9 +2,9 @@ package com.todolist.entity;
 
 import com.todolist.entity.enums.TodoDetailStatus;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
+import static lombok.AccessLevel.*;
 
 @Entity
 @Getter
@@ -15,6 +15,7 @@ public class TodoDetail {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Setter(PROTECTED)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "todo_id")
     private Todo todo;
