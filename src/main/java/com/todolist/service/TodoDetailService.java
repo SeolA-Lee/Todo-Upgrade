@@ -9,6 +9,7 @@ import com.todolist.exception.NotFoundException;
 import com.todolist.exception.TodoDetailLimitExceededException;
 import com.todolist.repository.TodoDetailRepository;
 import com.todolist.repository.TodoRepository;
+import com.todolist.service.dto.request.TodoDetailStatusUpdateRequest;
 import com.todolist.service.dto.request.TodoRequest;
 import com.todolist.service.dto.response.TodoDetailResponse;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,26 @@ public class TodoDetailService {
                 .status(TodoDetailStatus.NOT_STARTED)
                 .build();
         todoDetailRepository.save(todoDetail);
+
+        return TodoDetailResponse.from(todoDetail);
+    }
+
+    @Transactional
+    public TodoDetailResponse updateTodoDetailStatus(Member member, Long todoDetailId, TodoDetailStatusUpdateRequest request) {
+        // 세부 할 일 확인
+        TodoDetail todoDetail = todoDetailRepository.findById(todoDetailId)
+                .orElseThrow(() -> new NotFoundException("해당 할 일을 찾을 수 없습니다."));
+
+        // 부모 투두 확인
+        Todo parentTodo = todoRepository.findById(todoDetail.getTodo().getId())
+                .orElseThrow(() -> new NotFoundException("상위 할 일을 찾을 수 없습니다."));
+
+        // 해당 사용자의 투두인지 확인
+        if (!parentTodo.getMember().getId().equals(member.getId())) {
+            throw new ForbiddenAccessException("해당 목록에 접근 권한이 없습니다.");
+        }
+
+        todoDetail.updateStatus(request.status());
 
         return TodoDetailResponse.from(todoDetail);
     }

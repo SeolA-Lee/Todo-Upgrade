@@ -43,4 +43,8 @@ public class Todo {
         this.todoDetail = new ArrayList<>();
         todoDetail.setTodo(this);
     }
+
+    public void updateStatus(TodoStatus status) {
+        this.status = status;
+    }
 }

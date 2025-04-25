@@ -3,8 +3,11 @@ package com.todolist.service;
 import com.todolist.entity.Member;
 import com.todolist.entity.Todo;
 import com.todolist.entity.enums.TodoStatus;
+import com.todolist.exception.ForbiddenAccessException;
+import com.todolist.exception.NotFoundException;
 import com.todolist.repository.TodoRepository;
 import com.todolist.service.dto.request.TodoRequest;
+import com.todolist.service.dto.request.TodoStatusUpdateRequest;
 import com.todolist.service.dto.response.TodoListResponse;
 import com.todolist.service.dto.response.TodoResponse;
 import lombok.RequiredArgsConstructor;
@@ -47,5 +50,21 @@ public class TodoService {
         Page<Todo> todos = todoRepository.findByMemberId(member.getId(), pageable);
 
         return TodoListResponse.from(todos);
+    }
+
+    @Transactional
+    public TodoResponse updateTodoStatus(Member member, Long todoId, TodoStatusUpdateRequest request) {
+        // 투두 존재 여부
+        Todo todo = todoRepository.findById(todoId)
+                .orElseThrow(() -> new NotFoundException("상위 할 일을 찾을 수 없습니다."));
+
+        // 해당 사용자의 투두인지 확인
+        if (!todo.getMember().getId().equals(member.getId())) {
+            throw new ForbiddenAccessException("해당 목록에 접근 권한이 없습니다.");
+        }
+
+        todo.updateStatus(request.status());
+
+        return TodoResponse.from(todo);
     }
 }

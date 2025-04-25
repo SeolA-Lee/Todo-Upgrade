@@ -1,9 +1,6 @@
 package com.todolist.exception.handler;
 
-import com.todolist.exception.DuplicateEmailException;
-import com.todolist.exception.ForbiddenAccessException;
-import com.todolist.exception.TodoDetailLimitExceededException;
-import com.todolist.exception.UnauthorizedException;
+import com.todolist.exception.*;
 import com.todolist.exception.dto.ExceptionResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -45,5 +42,13 @@ public class GlobalExceptionHandler {
         log.warn("TodoDetailLimitExceededException 발생");
         log.warn("status: {}, message: {}", exceptionResponse.status(), exceptionResponse.message());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ExceptionResponse> handleNotFoundException(NotFoundException e) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse(HttpStatus.NOT_FOUND.toString(), e.getMessage());
+        log.warn("NotFoundException 발생");
+        log.warn("status: {}, message: {}", exceptionResponse.status(), exceptionResponse.message());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exceptionResponse);
     }
 }

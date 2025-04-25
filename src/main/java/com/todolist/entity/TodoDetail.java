@@ -33,4 +33,8 @@ public class TodoDetail {
         this.detailList = detailList;
         this.status = status;
     }
+
+    public void updateStatus(TodoDetailStatus status) {
+        this.status = status;
+    }
 }
