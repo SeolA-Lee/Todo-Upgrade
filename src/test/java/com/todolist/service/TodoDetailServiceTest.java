@@ -10,6 +10,7 @@ import com.todolist.exception.NotFoundException;
 import com.todolist.exception.TodoDetailLimitExceededException;
 import com.todolist.repository.TodoDetailRepository;
 import com.todolist.repository.TodoRepository;
+import com.todolist.service.dto.request.TodoDetailStatusUpdateRequest;
 import com.todolist.service.dto.request.TodoRequest;
 import com.todolist.service.dto.response.TodoDetailResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -69,7 +70,7 @@ class TodoDetailServiceTest {
         verify(todoDetailRepository, times(1)).save(any(TodoDetail.class));
 
         assertThat(response.parentId()).isEqualTo(parentTodoId);
-        assertThat(response.status()).isEqualTo(TodoDetailStatus.NOT_STARTED);
+        assertThat(response.status()).isEqualTo(TodoDetailStatus.NOT_STARTED.getKoreanStatus());
     }
 
     @Test
@@ -146,5 +147,99 @@ class TodoDetailServiceTest {
 
         // when & then
         assertThrows(TodoDetailLimitExceededException.class, () -> todoDetailService.createTodoDetail(member, parentTodoId, request));
+    }
+
+    @Test
+    @DisplayName("본인 TODO의 세부 할 일의 진행 상태를 변경할 수 있다.")
+    void updateTodoDetailStatus() {
+        // given
+        Member member = Member.builder()
+                .email("test@example.com")
+                .password("password1234")
+                .build();
+        ReflectionTestUtils.setField(member, "id", 1L);
+
+        Todo parentTodo = Todo.builder()
+                .member(member)
+                .todoList("상위 할 일")
+                .status(TodoStatus.NOT_STARTED)
+                .build();
+
+        TodoDetail todoDetail = TodoDetail.builder()
+                .todo(parentTodo)
+                .detailList("하위 할 일")
+                .status(TodoDetailStatus.NOT_STARTED)
+                .build();
+
+        TodoDetailStatusUpdateRequest request = new TodoDetailStatusUpdateRequest(TodoDetailStatus.COMPLETED);
+
+        when(todoDetailRepository.findById(todoDetail.getId())).thenReturn(Optional.of(todoDetail));
+        when(todoRepository.findById(parentTodo.getId())).thenReturn(Optional.of(parentTodo));
+
+        // when
+        TodoDetailResponse response = todoDetailService.updateTodoDetailStatus(member, todoDetail.getId(), request);
+
+        // then
+        verify(todoDetailRepository, times(1)).findById(todoDetail.getId());
+        verify(todoRepository, times(1)).findById(parentTodo.getId());
+
+        assertThat(response.status()).isEqualTo("진행 완료");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 세부 할 일의 상태 변경을 요청할 경우 예외가 발생한다.")
+    void updateTodoDetailStatusFailedDueToTodoDetailNotFound() {
+        // given
+        Member member = Member.builder()
+                .email("test@example.com")
+                .password("password1234")
+                .build();
+
+        Long ghostTodoDetailId = 999L;
+
+        when(todoDetailRepository.findById(ghostTodoDetailId)).thenReturn(Optional.empty());
+
+        TodoDetailStatusUpdateRequest request = new TodoDetailStatusUpdateRequest(TodoDetailStatus.COMPLETED);
+
+        // when & then
+        assertThrows(NotFoundException.class, () -> todoDetailService.updateTodoDetailStatus(member, ghostTodoDetailId, request));
+    }
+
+    @Test
+    @DisplayName("다른 사용자의 세부 할 일의 상태 변경을 시도할 경우 예외가 발생한다.")
+    void updateTodoDetailStatusFailedDueToForbidden() {
+        // given
+        Member other = Member.builder()
+                .email("other@example.com")
+                .password("password1234")
+                .build();
+        ReflectionTestUtils.setField(other, "id", 1L);
+
+        Member me = Member.builder()
+                .email("me@example.com")
+                .password("password1234")
+                .build();
+        ReflectionTestUtils.setField(me, "id", 2L);
+
+        Todo otherTodo = Todo.builder()
+                .member(other)
+                .todoList("다른 사람의 할 일")
+                .status(TodoStatus.NOT_STARTED)
+                .build();
+
+        TodoDetail otherTodoDetail = TodoDetail.builder()
+                .todo(otherTodo)
+                .detailList("다른 사람의 하위 할 일")
+                .status(TodoDetailStatus.NOT_STARTED)
+                .build();
+
+        TodoDetailStatusUpdateRequest request = new TodoDetailStatusUpdateRequest(TodoDetailStatus.COMPLETED);
+
+        Long otherTodoDetailId = otherTodoDetail.getId();
+        when(todoDetailRepository.findById(otherTodoDetailId)).thenReturn(Optional.of(otherTodoDetail));
+        when(todoRepository.findById(otherTodo.getId())).thenReturn(Optional.of(otherTodo));
+
+        // when & then
+        assertThrows(ForbiddenAccessException.class, () -> todoDetailService.updateTodoDetailStatus(me, otherTodoDetailId, request));
     }
 }

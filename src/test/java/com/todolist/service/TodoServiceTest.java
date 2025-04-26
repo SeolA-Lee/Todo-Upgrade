@@ -5,8 +5,11 @@ import com.todolist.entity.Todo;
 import com.todolist.entity.TodoDetail;
 import com.todolist.entity.enums.TodoDetailStatus;
 import com.todolist.entity.enums.TodoStatus;
+import com.todolist.exception.ForbiddenAccessException;
+import com.todolist.exception.NotFoundException;
 import com.todolist.repository.TodoRepository;
 import com.todolist.service.dto.request.TodoRequest;
+import com.todolist.service.dto.request.TodoStatusUpdateRequest;
 import com.todolist.service.dto.response.TodoListResponse;
 import com.todolist.service.dto.response.TodoResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,8 +24,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @Transactional
@@ -58,7 +63,7 @@ class TodoServiceTest {
         // then
         verify(todoRepository, times(1)).save(any(Todo.class));
 
-        assertThat(response.status()).isEqualTo(TodoStatus.NOT_STARTED);
+        assertThat(response.status()).isEqualTo(TodoStatus.NOT_STARTED.getKoreanStatus());
     }
 
     @Test
@@ -114,5 +119,85 @@ class TodoServiceTest {
         assertThat(todoList.size()).isEqualTo(11);
         assertThat(response.todos()).hasSize(10);
         assertThat(response.isLast()).isFalse();
+    }
+
+    @Test
+    @DisplayName("본인 TODO의 진행 상태를 변경할 수 있다.")
+    void updateTodoStatus() {
+        // given
+        Member member = Member.builder()
+                .email("test@example.com")
+                .password("password1234")
+                .build();
+        ReflectionTestUtils.setField(member, "id", 1L);
+
+        Todo todo = Todo.builder()
+                .member(member)
+                .todoList("할 일 1")
+                .status(TodoStatus.NOT_STARTED)
+                .build();
+
+        TodoStatusUpdateRequest request = new TodoStatusUpdateRequest(TodoStatus.IN_PROGRESS);
+
+        Long todoId = todo.getId();
+        when(todoRepository.findById(todoId)).thenReturn(Optional.of(todo));
+
+        // when
+        TodoResponse response = todoService.updateTodoStatus(member, todoId, request);
+
+        // then
+        verify(todoRepository, times(1)).findById(todoId);
+
+        assertThat(response.status()).isEqualTo("진행 중");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 TODO의 상태 변경을 요청할 경우 예외가 발생한다.")
+    void updateTodoStatusFailedDueToTodoNotFound() {
+        // given
+        Member member = Member.builder()
+                .email("test@example.com")
+                .password("password1234")
+                .build();
+
+        Long ghostTodoId = 999L;
+
+        when(todoRepository.findById(ghostTodoId)).thenReturn(Optional.empty());
+
+        TodoStatusUpdateRequest request = new TodoStatusUpdateRequest(TodoStatus.IN_PROGRESS);
+
+        // when & then
+        assertThrows(NotFoundException.class, () -> todoService.updateTodoStatus(member, ghostTodoId, request));
+    }
+
+    @Test
+    @DisplayName("다른 사용자의 TODO의 상태 변경을 시도할 경우 예외가 발생한다.")
+    void updateTodoStatusFailedDueToForbidden() {
+        // given
+        Member other = Member.builder()
+                .email("other@example.com")
+                .password("password1234")
+                .build();
+        ReflectionTestUtils.setField(other, "id", 1L);
+
+        Member me = Member.builder()
+                .email("me@example.com")
+                .password("password1234")
+                .build();
+        ReflectionTestUtils.setField(me, "id", 2L);
+
+        Todo otherTodo = Todo.builder()
+                .member(other)
+                .todoList("다른 사람의 할 일")
+                .status(TodoStatus.NOT_STARTED)
+                .build();
+
+        TodoStatusUpdateRequest request = new TodoStatusUpdateRequest(TodoStatus.IN_PROGRESS);
+
+        Long todoId = otherTodo.getId();
+        when(todoRepository.findById(todoId)).thenReturn(Optional.of(otherTodo));
+
+        // when & then
+        assertThrows(ForbiddenAccessException.class, () -> todoService.updateTodoStatus(me, todoId, request));
     }
 }
