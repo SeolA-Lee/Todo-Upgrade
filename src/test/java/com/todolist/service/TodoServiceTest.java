@@ -6,6 +6,7 @@ import com.todolist.entity.TodoDetail;
 import com.todolist.entity.enums.TodoDetailStatus;
 import com.todolist.entity.enums.TodoStatus;
 import com.todolist.exception.ForbiddenAccessException;
+import com.todolist.exception.InvalidDeleteException;
 import com.todolist.exception.NotFoundException;
 import com.todolist.repository.TodoRepository;
 import com.todolist.service.dto.request.TodoRequest;
@@ -42,20 +43,16 @@ class TodoServiceTest {
         todoService = new TodoService(todoRepository);
     }
 
+    /**
+     * 등록 테스트
+     */
     @Test
     @DisplayName("로그인한 회원은 TODO를 등록할 수 있으며, 한 번에 하나만 등록 가능하다.")
     void createTodo() {
         // given
-        String email = "test@example.com";
-        String password = "password1234";
+        Member member = buildMember("test@example.com", "password1234");
 
-        Member member = Member.builder()
-                .email(email)
-                .password(password)
-                .build();
-
-        String todo = "오늘 할 일";
-        TodoRequest request = new TodoRequest(todo);
+        TodoRequest request = new TodoRequest("오늘 할 일");
 
         // when
         TodoResponse response = todoService.createTodo(member, request);
@@ -66,40 +63,27 @@ class TodoServiceTest {
         assertThat(response.status()).isEqualTo(TodoStatus.NOT_STARTED.getKoreanStatus());
     }
 
+    /**
+     * 조회 테스트
+     */
     @Test
     @DisplayName("본인의 TODO를 조회할 수 있으며, 10개씩 세부 할 일과 함께 확인할 수 있다.")
     void readTodos() {
         // given
-        Member member = Member.builder()
-                .email("test@example.com")
-                .password("password1234")
-                .build();
+        Member member = buildMember("test@example.com", "password1234");
         ReflectionTestUtils.setField(member, "id", 1L);
 
         List<Todo> todoList = new ArrayList<>();
 
-        Todo parentTodo = Todo.builder()
-                .member(member)
-                .todoList("할 일 1")
-                .status(TodoStatus.NOT_STARTED)
-                .build();
-
-        TodoDetail todoDetail = TodoDetail.builder()
-                .todo(parentTodo)
-                .detailList("세부 할 일 1")
-                .status(TodoDetailStatus.NOT_STARTED)
-                .build();
+        Todo parentTodo = buildTodo(member, "할 일");
+        TodoDetail todoDetail = buildTodoDetail(parentTodo, "세부 할 일");
 
         parentTodo.addTodoDetail(todoDetail);
         todoList.add(parentTodo);
 
         // 그 외 10개 더 생성
         for (int i = 0; i < 10; i++) {
-            Todo todo = Todo.builder()
-                    .member(member)
-                    .todoList("할 일들")
-                    .status(TodoStatus.NOT_STARTED)
-                    .build();
+            Todo todo = buildTodo(member, "할 일들");
             todoList.add(todo);
         }
 
@@ -121,21 +105,17 @@ class TodoServiceTest {
         assertThat(response.isLast()).isFalse();
     }
 
+    /**
+     * 상태 변경 테스트
+     */
     @Test
     @DisplayName("본인 TODO의 진행 상태를 변경할 수 있다.")
     void updateTodoStatus() {
         // given
-        Member member = Member.builder()
-                .email("test@example.com")
-                .password("password1234")
-                .build();
+        Member member = buildMember("test@example.com", "password1234");
         ReflectionTestUtils.setField(member, "id", 1L);
 
-        Todo todo = Todo.builder()
-                .member(member)
-                .todoList("할 일 1")
-                .status(TodoStatus.NOT_STARTED)
-                .build();
+        Todo todo = buildTodo(member, "할 일");
 
         TodoStatusUpdateRequest request = new TodoStatusUpdateRequest(TodoStatus.IN_PROGRESS);
 
@@ -155,10 +135,7 @@ class TodoServiceTest {
     @DisplayName("존재하지 않는 TODO의 상태 변경을 요청할 경우 예외가 발생한다.")
     void updateTodoStatusFailedDueToTodoNotFound() {
         // given
-        Member member = Member.builder()
-                .email("test@example.com")
-                .password("password1234")
-                .build();
+        Member member = buildMember("test@example.com", "password1234");
 
         Long ghostTodoId = 999L;
 
@@ -174,23 +151,13 @@ class TodoServiceTest {
     @DisplayName("다른 사용자의 TODO의 상태 변경을 시도할 경우 예외가 발생한다.")
     void updateTodoStatusFailedDueToForbidden() {
         // given
-        Member other = Member.builder()
-                .email("other@example.com")
-                .password("password1234")
-                .build();
+        Member other = buildMember("other@example.com", "password1234");
         ReflectionTestUtils.setField(other, "id", 1L);
 
-        Member me = Member.builder()
-                .email("me@example.com")
-                .password("password1234")
-                .build();
+        Member me = buildMember("me@example.com", "password1234");
         ReflectionTestUtils.setField(me, "id", 2L);
 
-        Todo otherTodo = Todo.builder()
-                .member(other)
-                .todoList("다른 사람의 할 일")
-                .status(TodoStatus.NOT_STARTED)
-                .build();
+        Todo otherTodo = buildTodo(other, "다른 사람의 할 일");
 
         TodoStatusUpdateRequest request = new TodoStatusUpdateRequest(TodoStatus.IN_PROGRESS);
 
@@ -199,5 +166,141 @@ class TodoServiceTest {
 
         // when & then
         assertThrows(ForbiddenAccessException.class, () -> todoService.updateTodoStatus(me, todoId, request));
+    }
+
+    /**
+     * 삭제 테스트
+     */
+    @Test
+    @DisplayName("본인의 완료된 TODO를 하나씩 삭제할 수 있다.")
+    void deleteTodo() {
+        // given
+        Member member = buildMember("test@example.com", "password1234");
+        ReflectionTestUtils.setField(member, "id", 1L);
+
+        Todo todo = buildTodo(member, "할 일");
+        todo.updateStatus(TodoStatus.COMPLETED);
+        ReflectionTestUtils.setField(todo, "id", 1L);
+
+        List<Long> todoId = List.of(todo.getId());
+
+        when(todoRepository.findAllById(todoId)).thenReturn(List.of(todo));
+        when(todoRepository.findById(todo.getId())).thenReturn(Optional.of(todo));
+
+        // when
+        todoService.deleteTodo(member, todoId);
+
+        // then
+        verify(todoRepository, times(1)).delete(todo);
+    }
+
+    @Test
+    @DisplayName("본인의 완료된 TODO 여러 개를 한번에 삭제할 수 있다.")
+    void deleteTodos() {
+        // given
+        Member member = buildMember("test@example.com", "password1234");
+        ReflectionTestUtils.setField(member, "id", 1L);
+
+        Todo todo1 = buildTodo(member, "할 일 1");
+        Todo todo2 = buildTodo(member, "할 일 2");
+        todo1.updateStatus(TodoStatus.COMPLETED);
+        todo2.updateStatus(TodoStatus.COMPLETED);
+        ReflectionTestUtils.setField(todo1, "id", 1L);
+        ReflectionTestUtils.setField(todo2, "id", 2L);
+
+        List<Long> todoIds = List.of(todo1.getId(), todo2.getId());
+
+        when(todoRepository.findAllById(todoIds)).thenReturn(List.of(todo1, todo2));
+        when(todoRepository.findById(todo1.getId())).thenReturn(Optional.of(todo1));
+        when(todoRepository.findById(todo2.getId())).thenReturn(Optional.of(todo2));
+
+        // when
+        todoService.deleteTodo(member, todoIds);
+
+        // then
+        verify(todoRepository, times(1)).delete(todo1);
+        verify(todoRepository, times(1)).delete(todo2);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 TODO를 삭제 요청할 경우 예외가 발생한다.")
+    void deleteTodosFailedDueToTodoNotFound() {
+        // given
+        Member member = buildMember("test@example.com", "password1234");
+        ReflectionTestUtils.setField(member, "id", 1L);
+
+        List<Long> ghostTodoId = List.of(999L);
+
+        when(todoRepository.findAllById(ghostTodoId)).thenReturn(List.of());
+
+        // when & then
+        assertThrows(NotFoundException.class, () -> todoService.deleteTodo(member, ghostTodoId));
+    }
+
+    @Test
+    @DisplayName("다른 사용자의 TODO를 삭제 요청할 경우 예외가 발생한다.")
+    void deleteTodosFailedDueToForbidden() {
+        // given
+        Member other = buildMember("other@example.com", "password1234");
+        ReflectionTestUtils.setField(other, "id", 1L);
+
+        Member me = buildMember("me@example.com", "password1234");
+        ReflectionTestUtils.setField(me, "id", 2L);
+
+        Todo otherTodo = buildTodo(other, "다른 사람의 할 일");
+        ReflectionTestUtils.setField(otherTodo, "id", 1L);
+
+        List<Long> todoIds = List.of(otherTodo.getId());
+
+        when(todoRepository.findAllById(todoIds)).thenReturn(List.of(otherTodo));
+        when(todoRepository.findById(otherTodo.getId())).thenReturn(Optional.of(otherTodo));
+
+        // when & then
+        assertThrows(ForbiddenAccessException.class, () -> todoService.deleteTodo(me, todoIds));
+    }
+
+    @Test
+    @DisplayName("완료되지 않은 TODO를 삭제 요청할 경우 예외가 발생한다.")
+    void deleteTodosFailedDueToTodoIsNotCompleted() {
+        // given
+        Member member = buildMember("test@example.com", "password1234");
+        ReflectionTestUtils.setField(member, "id", 1L);
+
+        Todo todo = buildTodo(member, "진행 중인 할 일");
+        ReflectionTestUtils.setField(todo, "id", 1L);
+
+        List<Long> todoIds = List.of(todo.getId());
+
+        when(todoRepository.findAllById(todoIds)).thenReturn(List.of(todo));
+        when(todoRepository.findById(todo.getId())).thenReturn(Optional.of(todo));
+
+        // when & then
+        assertThrows(InvalidDeleteException.class, () -> todoService.deleteTodo(member, todoIds));
+    }
+
+    /**
+     * 편의 메소드
+     */
+    private Member buildMember(String email, String password) {
+        return Member.builder()
+                .email(email)
+                .password(password)
+                .build();
+    }
+
+    private Todo buildTodo(Member member, String content) {
+        return Todo.builder()
+                .member(member)
+                .todoList(content)
+                .status(TodoStatus.NOT_STARTED)
+                .build();
+    }
+
+    private TodoDetail buildTodoDetail(Todo parentTodo, String content) {
+        return TodoDetail.builder()
+                .todo(parentTodo)
+                .detailList(content)
+                .status(TodoDetailStatus.NOT_STARTED)
+                .build();
     }
 }
