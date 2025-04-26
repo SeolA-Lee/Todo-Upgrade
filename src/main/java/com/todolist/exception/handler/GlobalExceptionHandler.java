@@ -51,4 +51,12 @@ public class GlobalExceptionHandler {
         log.warn("status: {}, message: {}", exceptionResponse.status(), exceptionResponse.message());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(exceptionResponse);
     }
+
+    @ExceptionHandler(InvalidDeleteException.class)
+    public ResponseEntity<ExceptionResponse> handleInvalidDeleteException(InvalidDeleteException e) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse(HttpStatus.BAD_REQUEST.toString(), e.getMessage());
+        log.warn("InvalidDeleteException 발생");
+        log.warn("status: {}, message: {}", exceptionResponse.status(), exceptionResponse.message());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
+    }
 }

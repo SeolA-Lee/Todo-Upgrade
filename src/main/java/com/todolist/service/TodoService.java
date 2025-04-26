@@ -4,6 +4,7 @@ import com.todolist.entity.Member;
 import com.todolist.entity.Todo;
 import com.todolist.entity.enums.TodoStatus;
 import com.todolist.exception.ForbiddenAccessException;
+import com.todolist.exception.InvalidDeleteException;
 import com.todolist.exception.NotFoundException;
 import com.todolist.repository.TodoRepository;
 import com.todolist.service.dto.request.TodoRequest;
@@ -17,6 +18,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -54,17 +57,57 @@ public class TodoService {
 
     @Transactional
     public TodoResponse updateTodoStatus(Member member, Long todoId, TodoStatusUpdateRequest request) {
-        // 투두 존재 여부
-        Todo todo = todoRepository.findById(todoId)
-                .orElseThrow(() -> new NotFoundException("상위 할 일을 찾을 수 없습니다."));
 
-        // 해당 사용자의 투두인지 확인
-        if (!todo.getMember().getId().equals(member.getId())) {
-            throw new ForbiddenAccessException("해당 목록에 접근 권한이 없습니다.");
-        }
+        Todo todo = findTodo(todoId);
+        verifyTodoOwner(member, todo);
 
         todo.updateStatus(request.status());
 
         return TodoResponse.from(todo);
+    }
+
+    @Transactional
+    public void deleteTodo(Member member, List<Long> todoIds) {
+
+        /**
+         * 요구사항
+         * - 사용자는 투두를 완료 시 개별로 삭제할 수 있다.
+         * - 사용자는 여러 개의 투두를 한 번에 선택하여 삭제할 수 있다.
+         * - 상위 투두를 삭제할 시 하위 할 일과 함께 삭제된다.
+         */
+        List<Todo> todoList = todoRepository.findAllById(todoIds);
+
+        // 요청한 개수와 조회한 개수가 일치하는지 확인
+        if (todoList.size() != todoIds.size()) {
+            throw new NotFoundException("존재하지 않는 TODO가 있습니다.");
+        }
+
+        for (Todo todo : todoList) {
+            Todo findTodo = findTodo(todo.getId());
+            verifyTodoOwner(member, findTodo);
+            verifyTodoIsCompleted(findTodo);
+
+            todoRepository.delete(findTodo);
+        }
+    }
+
+    // 투두 존재 여부 확인하는 메소드
+    private Todo findTodo(Long todoId) {
+        return todoRepository.findById(todoId)
+                .orElseThrow(() -> new NotFoundException("해당 TODO를 찾을 수 없습니다: todo_id = " + todoId));
+    }
+
+    // 해당 사용자의 투두인지 확인하는 메소드
+    private void verifyTodoOwner(Member member, Todo todo) {
+        if (!todo.getMember().getId().equals(member.getId())) {
+            throw new ForbiddenAccessException("해당 목록에 접근 권한이 없습니다: todo_id = " + todo.getId());
+        }
+    }
+
+    // 완료된 투두인지 확인하는 메소드
+    private void verifyTodoIsCompleted(Todo todo) {
+        if (todo.getStatus() != TodoStatus.COMPLETED) {
+            throw new InvalidDeleteException("완료된 TODO만 삭제 가능합니다: todo_id = " + todo.getId() + ", status = " + todo.getStatus());
+        }
     }
 }

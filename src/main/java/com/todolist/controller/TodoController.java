@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequestMapping("/todo")
@@ -47,5 +49,14 @@ public class TodoController {
     ) {
         TodoResponse response = todoService.updateTodoStatus(userDetails.member(), todoId, request);
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @DeleteMapping
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteTodoList(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(name = "ids") List<Long> todoIds
+    ) {
+        todoService.deleteTodo(userDetails.member(), todoIds);
     }
 }

@@ -5,6 +5,7 @@ import com.todolist.entity.Todo;
 import com.todolist.entity.TodoDetail;
 import com.todolist.entity.enums.TodoDetailStatus;
 import com.todolist.exception.ForbiddenAccessException;
+import com.todolist.exception.InvalidDeleteException;
 import com.todolist.exception.NotFoundException;
 import com.todolist.exception.TodoDetailLimitExceededException;
 import com.todolist.repository.TodoDetailRepository;
@@ -16,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -33,9 +36,7 @@ public class TodoDetailService {
                 .orElseThrow(() -> new NotFoundException("상위 할 일을 찾을 수 없습니다."));
 
         // 해당 사용자의 투두인지 확인
-        if (!parentTodo.getMember().getId().equals(member.getId())) {
-            throw new ForbiddenAccessException("해당 목록에 접근 권한이 없습니다.");
-        }
+        verifyTodoOwner(member, parentTodo);
 
         // 해당 상위 투두의 세부 할 일 개수가 3개가 넘으면 예외
         Long count = todoDetailRepository.countByTodoId(parentTodoId);
@@ -55,21 +56,64 @@ public class TodoDetailService {
 
     @Transactional
     public TodoDetailResponse updateTodoDetailStatus(Member member, Long todoDetailId, TodoDetailStatusUpdateRequest request) {
-        // 세부 할 일 확인
-        TodoDetail todoDetail = todoDetailRepository.findById(todoDetailId)
-                .orElseThrow(() -> new NotFoundException("해당 할 일을 찾을 수 없습니다."));
 
-        // 부모 투두 확인
-        Todo parentTodo = todoRepository.findById(todoDetail.getTodo().getId())
-                .orElseThrow(() -> new NotFoundException("상위 할 일을 찾을 수 없습니다."));
-
-        // 해당 사용자의 투두인지 확인
-        if (!parentTodo.getMember().getId().equals(member.getId())) {
-            throw new ForbiddenAccessException("해당 목록에 접근 권한이 없습니다.");
-        }
+        TodoDetail todoDetail = findTodoDetail(todoDetailId);
+        Todo parentTodo = findParentTodo(todoDetail.getTodo().getId());
+        verifyTodoOwner(member, parentTodo);
 
         todoDetail.updateStatus(request.status());
 
         return TodoDetailResponse.from(todoDetail);
+    }
+
+    @Transactional
+    public void deleteTodoDetail(Member member, List<Long> todoDetailIds) {
+
+        /**
+         * 요구사항
+         * - 사용자는 세부 할 일을 완료 시 개별로 삭제할 수 있다.
+         * - 사용자는 여러 개의 세부 할 일을 한 번에 선택하여 삭제할 수 있다.
+         */
+        List<TodoDetail> todoDetailList = todoDetailRepository.findAllById(todoDetailIds);
+
+        // 요청한 개수와 조회한 개수가 일치하는지 확인
+        if (todoDetailList.size() != todoDetailIds.size()) {
+            throw new NotFoundException("존재하지 않는 TODO가 있습니다.");
+        }
+
+        for (TodoDetail todoDetail : todoDetailList) {
+            TodoDetail findTodoDetail = findTodoDetail(todoDetail.getId());
+            Todo parentTodo = findParentTodo(todoDetail.getTodo().getId());
+            verifyTodoOwner(member, parentTodo);
+            verifyTodoDetailIsCompleted(findTodoDetail);
+
+            todoDetailRepository.delete(findTodoDetail);
+        }
+    }
+
+    // 세부 할 일 존재 여부 확인하는 메소드
+    private TodoDetail findTodoDetail(Long todoDetailId) {
+        return todoDetailRepository.findById(todoDetailId)
+                .orElseThrow(() -> new NotFoundException("해당 할 일을 찾을 수 없습니다."));
+    }
+
+    // 부모 투두가 존재하는지 확인하는 메소드
+    private Todo findParentTodo(Long detailId) {
+        return todoRepository.findById(detailId)
+                .orElseThrow(() -> new NotFoundException("상위 할 일을 찾을 수 없습니다."));
+    }
+
+    // 해당 사용자의 투두인지 확인하는 메소드
+    private void verifyTodoOwner(Member member, Todo parentTodo) {
+        if (!parentTodo.getMember().getId().equals(member.getId())) {
+            throw new ForbiddenAccessException("해당 목록에 접근 권한이 없습니다.");
+        }
+    }
+
+    // 완료된 세부 할 일인지 확인하는 메소드
+    private void verifyTodoDetailIsCompleted(TodoDetail todoDetail) {
+        if (todoDetail.getStatus() != TodoDetailStatus.COMPLETED) {
+            throw new InvalidDeleteException("완료된 세부 할 일만 삭제 가능합니다.");
+        }
     }
 }

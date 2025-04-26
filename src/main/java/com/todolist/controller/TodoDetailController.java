@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/todo")
 @RequiredArgsConstructor
@@ -36,5 +38,14 @@ public class TodoDetailController {
     ) {
         TodoDetailResponse response = todoDetailService.updateTodoDetailStatus(userDetails.member(), todoDetailId, request);
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @DeleteMapping("/detail")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteTodoDetail(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(name = "ids") List<Long> todoDetailIds
+    ) {
+        todoDetailService.deleteTodoDetail(userDetails.member(), todoDetailIds);
     }
 }
