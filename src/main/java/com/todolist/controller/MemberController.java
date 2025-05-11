@@ -1,6 +1,7 @@
 package com.todolist.controller;
 
 import com.todolist.auth.jwt.dto.JwtToken;
+import com.todolist.controller.docs.MemberControllerDocs;
 import com.todolist.service.MemberService;
 import com.todolist.service.dto.request.MemberRequest;
 import com.todolist.service.dto.response.RegisterResponse;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/member")
 @RequiredArgsConstructor
-public class MemberController {
+public class MemberController implements MemberControllerDocs {
 
     private final MemberService memberService;
 

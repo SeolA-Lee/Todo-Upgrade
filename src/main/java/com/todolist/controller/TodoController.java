@@ -1,6 +1,7 @@
 package com.todolist.controller;
 
 import com.todolist.auth.user.CustomUserDetails;
+import com.todolist.controller.docs.TodoControllerDocs;
 import com.todolist.service.TodoService;
 import com.todolist.service.dto.request.TodoRequest;
 import com.todolist.service.dto.request.TodoStatusUpdateRequest;
@@ -19,7 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/todo")
 @RequiredArgsConstructor
-public class TodoController {
+public class TodoController implements TodoControllerDocs {
 
     private final TodoService todoService;
 
