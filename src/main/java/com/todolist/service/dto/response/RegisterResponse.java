@@ -10,9 +10,12 @@ public record RegisterResponse(
         Long id,
 
         @Schema(description = "가입한 이메일", example = "member@gachon.ac.kr")
-        String email
+        String email,
+
+        @Schema(description = "닉네임", example = "김리츠")
+        String nickname
 ) {
     public static RegisterResponse from(Member member) {
-        return new RegisterResponse(member.getId(), member.getEmail());
+        return new RegisterResponse(member.getId(), member.getEmail(), member.getNickname());
     }
 }

@@ -9,6 +9,9 @@ public record MemberRequest(
         String email,
 
         @Schema(description = "비밀번호", example = "password1234")
-        String password
+        String password,
+
+        @Schema(description = "닉네임", example = "김리츠")
+        String nickname
 ) {
 }

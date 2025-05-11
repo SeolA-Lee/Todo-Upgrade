@@ -22,9 +22,13 @@ public class Member {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
+    private String nickname;
+
     @Builder
-    public Member(String email, String password) {
+    public Member(String email, String password, String nickname) {
         this.email = email;
         this.password = password;
+        this.nickname = nickname;
     }
 }

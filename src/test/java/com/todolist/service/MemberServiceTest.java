@@ -42,8 +42,9 @@ class MemberServiceTest {
         String email = "test@example.com";
         String password = "password1234";
         String encodedPassword = "encoded1234";
+        String nickname = "테스터";
 
-        MemberRequest request = new MemberRequest(email, password);
+        MemberRequest request = new MemberRequest(email, password, nickname);
 
         when(passwordEncoder.encode(password)).thenReturn(encodedPassword);
 
@@ -62,8 +63,9 @@ class MemberServiceTest {
         // given
         String email = "test@example.com";
         String password = "password1234";
+        String nickname = "테스터";
 
-        MemberRequest request = new MemberRequest(email, password);
+        MemberRequest request = new MemberRequest(email, password, nickname);
 
         when(memberRepository.existsByEmail(email)).thenReturn(true);
 
@@ -77,13 +79,14 @@ class MemberServiceTest {
         // given
         String email = "test@example.com";
         String password = "password1234";
+        String nickname = "테스터";
 
         Member member = Member.builder()
                 .email(email)
                 .password(passwordEncoder.encode(password))
                 .build();
 
-        MemberRequest request = new MemberRequest(email, password);
+        MemberRequest request = new MemberRequest(email, password, nickname);
 
         when(memberRepository.findByEmail(email)).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(password, member.getPassword())).thenReturn(true);
@@ -104,8 +107,9 @@ class MemberServiceTest {
         // given
         String email = "notfound@example.com";
         String password = "password1234";
+        String nickname = "테스터";
 
-        MemberRequest request = new MemberRequest(email, password);
+        MemberRequest request = new MemberRequest(email, password, nickname);
 
         when(memberRepository.findByEmail(email)).thenReturn(Optional.empty());
 
@@ -119,13 +123,14 @@ class MemberServiceTest {
         // given
         String email = "test@example.com";
         String password = "password1234";
+        String nickname = "테스터";
 
         Member member = Member.builder()
                 .email(email)
                 .password(passwordEncoder.encode(password))
                 .build();
 
-        MemberRequest request = new MemberRequest(email, password);
+        MemberRequest request = new MemberRequest(email, password, nickname);
 
         when(memberRepository.findByEmail(email)).thenReturn(Optional.of(member));
         when(passwordEncoder.matches(password, member.getPassword())).thenReturn(false);
