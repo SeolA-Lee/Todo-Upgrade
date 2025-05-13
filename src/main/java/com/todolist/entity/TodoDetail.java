@@ -8,7 +8,7 @@ import static lombok.AccessLevel.*;
 
 @Entity
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TodoDetail {
 
     @Id
