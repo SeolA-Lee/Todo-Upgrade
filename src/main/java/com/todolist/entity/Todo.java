@@ -25,6 +25,7 @@ public class Todo {
     @Column(nullable = false)
     private String todoList;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TodoStatus status = TodoStatus.NOT_STARTED;
