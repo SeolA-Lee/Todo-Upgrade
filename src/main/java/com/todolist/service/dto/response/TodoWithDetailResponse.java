@@ -8,6 +8,9 @@ import java.util.List;
 @Schema(description = "투두(세부 할 일 포함) 1개에 해당하는 응답 DTO")
 public record TodoWithDetailResponse(
 
+        @Schema(description = "조회수", example = "5")
+        Long hit,
+
         @Schema(description = "(부모)투두 ID", example = "1")
         Long id,
 
@@ -26,6 +29,6 @@ public record TodoWithDetailResponse(
                 .map(TodoDetailResponse::from)
                 .toList();
 
-        return new TodoWithDetailResponse(todo.getId(), todo.getTodoList(), todo.getStatus().getKoreanStatus(), list);
+        return new TodoWithDetailResponse(todo.getHit(), todo.getId(), todo.getTodoList(), todo.getStatus().getKoreanStatus(), list);
     }
 }
