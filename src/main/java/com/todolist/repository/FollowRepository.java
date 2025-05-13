@@ -13,4 +13,8 @@ public interface FollowRepository extends JpaRepository<Follow, Long> {
 
     @Query("SELECT f.followee FROM Follow f WHERE f.follower = :follower")
     Page<Member> findFolloweeByFollower(Member follower, Pageable pageable);
+
+    boolean existsByFollowerAndFollowee(Member follower, Member followee);
+
+    void deleteByFollowerAndFollowee(Member follower, Member followee);
 }
