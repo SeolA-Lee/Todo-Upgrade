@@ -2,6 +2,7 @@ package com.todolist.controller.docs;
 
 import com.todolist.auth.user.CustomUserDetails;
 import com.todolist.service.dto.response.FollowingListResponse;
+import com.todolist.service.dto.response.TodoListResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -35,5 +36,14 @@ public interface FollowControllerDocs {
             CustomUserDetails userDetails,
             @Parameter(description = "언팔로우할 유저 ID", example = "2")
             @PathVariable(name = "followeeId") Long followeeId
+    );
+
+    @Operation(summary = "팔로잉 하는 유저의 투두 조회", description = "팔로잉 하는 유저의 투두 조회를 요청합니다.")
+    @ApiResponse(description = "조회 성공", responseCode = "200")
+    ResponseEntity<TodoListResponse> readFolloweeTodoList(
+            CustomUserDetails userDetails,
+            @PathVariable(name = "followeeId") Long followeeId,
+            @Parameter(description = "페이지 번호 (0부터 시작)", example = "0")
+            @RequestParam(name = "page", defaultValue = "0") int pageNum
     );
 }

@@ -46,4 +46,8 @@ public class Todo {
     public void updateStatus(TodoStatus status) {
         this.status = status;
     }
+
+    public void increaseHit() {
+        this.hit++;
+    }
 }

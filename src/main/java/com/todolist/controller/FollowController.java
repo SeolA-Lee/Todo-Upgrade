@@ -4,6 +4,7 @@ import com.todolist.auth.user.CustomUserDetails;
 import com.todolist.controller.docs.FollowControllerDocs;
 import com.todolist.service.FollowService;
 import com.todolist.service.dto.response.FollowingListResponse;
+import com.todolist.service.dto.response.TodoListResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -42,5 +43,15 @@ public class FollowController implements FollowControllerDocs {
     ) {
         followService.unfollow(userDetails.member(), followeeId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/follow/{followeeId}/todo")
+    public ResponseEntity<TodoListResponse> readFolloweeTodoList(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable(name = "followeeId") Long followeeId,
+            @RequestParam(name = "page", defaultValue = "0") int pageNum
+    ) {
+        TodoListResponse response = followService.readFolloweeTodoList(userDetails.member(), followeeId, pageNum);
+        return ResponseEntity.ok(response);
     }
 }
