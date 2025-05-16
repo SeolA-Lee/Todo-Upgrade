@@ -13,6 +13,7 @@ import com.todolist.service.dto.request.TodoRequest;
 import com.todolist.service.dto.request.TodoStatusUpdateRequest;
 import com.todolist.service.dto.response.TodoListResponse;
 import com.todolist.service.dto.response.TodoResponse;
+import com.todolist.service.dto.response.TodoWithDetailResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -67,7 +68,7 @@ class TodoServiceTest {
      * 조회 테스트
      */
     @Test
-    @DisplayName("본인의 TODO를 조회할 수 있으며, 10개씩 세부 할 일과 함께 확인할 수 있다.")
+    @DisplayName("본인의 TODO를 조회할 수 있으며, 10개씩 세부 할 일과 함께 확인할 수 있다. 나의 투두 리스트 조회 시 조회수도 확인 할 수 있다.")
     void readTodos() {
         // given
         Member member = buildMember("test@example.com", "password1234");
@@ -77,11 +78,12 @@ class TodoServiceTest {
 
         Todo parentTodo = buildTodo(member, "할 일");
         TodoDetail todoDetail = buildTodoDetail(parentTodo, "세부 할 일");
+        ReflectionTestUtils.setField(parentTodo, "hit", 1L); // 조회수가 1이라 가정
 
         parentTodo.addTodoDetail(todoDetail);
         todoList.add(parentTodo);
 
-        // 그 외 10개 더 생성
+        // 그 외 10개 더 생성, 조회수는 0이라 가정
         for (int i = 0; i < 10; i++) {
             Todo todo = buildTodo(member, "할 일들");
             todoList.add(todo);
@@ -103,6 +105,14 @@ class TodoServiceTest {
         assertThat(todoList.size()).isEqualTo(11);
         assertThat(response.todos()).hasSize(10);
         assertThat(response.isLast()).isFalse();
+
+        TodoWithDetailResponse parentTodoWithDetailResponse = response.todos().getFirst();
+        assertThat(parentTodoWithDetailResponse.todo()).isEqualTo("할 일");
+        assertThat(parentTodoWithDetailResponse.hit()).isEqualTo(1L);
+
+        TodoWithDetailResponse otherTodoWithDetailResponse = response.todos().get(1);
+        assertThat(otherTodoWithDetailResponse.todo()).isEqualTo("할 일들");
+        assertThat(otherTodoWithDetailResponse.hit()).isEqualTo(0L);
     }
 
     /**
