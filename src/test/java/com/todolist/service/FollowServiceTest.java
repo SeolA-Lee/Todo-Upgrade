@@ -7,14 +7,21 @@ import com.todolist.exception.ConflictException;
 import com.todolist.repository.FollowRepository;
 import com.todolist.repository.MemberRepository;
 import com.todolist.repository.TodoRepository;
+import com.todolist.service.dto.response.FollowingListResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -32,6 +39,34 @@ class FollowServiceTest {
         memberRepository = mock(MemberRepository.class);
         todoRepository = mock(TodoRepository.class);
         followService = new FollowService(followRepository, memberRepository, todoRepository);
+    }
+
+    /**
+     * 팔로잉 목록 조회
+     */
+    @Test
+    @DisplayName("팔로우 하는 사람들을 리스트로 조회할 수 있다.")
+    void getFollowings() {
+        // given
+        Member me = buildMember("me@example.com", "me", 1L);
+        Member followee1 = buildMember("followee1@example.com", "followee1", 2L);
+        Member followee2 = buildMember("followee2@example.com", "followee2", 3L);
+
+        int pageNum = 0;
+        Pageable pageable = PageRequest.of(pageNum, 10);
+
+        Page<Member> followingPage = new PageImpl<>(List.of(followee1, followee2), pageable, 2);
+
+        when(followRepository.findFolloweeByFollower(me, pageable)).thenReturn(followingPage);
+
+        // when
+        FollowingListResponse response = followService.getFollowings(me, pageNum);
+
+        // then
+        verify(followRepository, times(1)).findFolloweeByFollower(me, pageable);
+
+        assertThat(response.followings()).hasSize(2);
+        assertThat(response.isLast()).isTrue();
     }
 
     /**
