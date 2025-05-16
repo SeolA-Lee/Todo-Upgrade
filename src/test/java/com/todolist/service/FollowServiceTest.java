@@ -41,10 +41,8 @@ class FollowServiceTest {
     @DisplayName("다른 사람을 팔로우할 수 있다.")
     void follow() {
         // given
-        Member me = buildMember("me@example.com", "me");
-        Member other = buildMember("other@example.com", "other");
-        ReflectionTestUtils.setField(me, "id", 1L);
-        ReflectionTestUtils.setField(other, "id", 2L);
+        Member me = buildMember("me@example.com", "me", 1L);
+        Member other = buildMember("other@example.com", "other", 2L);
 
         when(memberRepository.findById(1L)).thenReturn(Optional.of(me));
         when(memberRepository.findById(2L)).thenReturn(Optional.of(other));
@@ -61,8 +59,7 @@ class FollowServiceTest {
     @DisplayName("자기 자신은 팔로우할 수 없다.")
     void followFailedDueToBadRequest() {
         // given
-        Member me = buildMember("me@example.com", "me");
-        ReflectionTestUtils.setField(me, "id", 1L);
+        Member me = buildMember("me@example.com", "me", 1L);
 
         // when & then
         assertThrows(BadRequestException.class, () -> followService.follow(me, me.getId()));
@@ -72,10 +69,8 @@ class FollowServiceTest {
     @DisplayName("이미 팔로우한 경우 예외가 발생한다.")
     void followFailedDueToConflict() {
         // given
-        Member me = buildMember("me@example.com", "me");
-        Member other = buildMember("other@example.com", "other");
-        ReflectionTestUtils.setField(me, "id", 1L);
-        ReflectionTestUtils.setField(other, "id", 2L);
+        Member me = buildMember("me@example.com", "me", 1L);
+        Member other = buildMember("other@example.com", "other", 2L);
 
         when(memberRepository.findById(1L)).thenReturn(Optional.of(me));
         when(memberRepository.findById(2L)).thenReturn(Optional.of(other));
@@ -92,10 +87,8 @@ class FollowServiceTest {
     @DisplayName("다른 사람을 언팔로우할 수 있다.")
     void unfollow() {
         // given
-        Member me = buildMember("me@example.com", "me");
-        Member other = buildMember("other@example.com", "other");
-        ReflectionTestUtils.setField(me, "id", 1L);
-        ReflectionTestUtils.setField(other, "id", 2L);
+        Member me = buildMember("me@example.com", "me", 1L);
+        Member other = buildMember("other@example.com", "other", 2L);
 
         when(memberRepository.findById(1L)).thenReturn(Optional.of(me));
         when(memberRepository.findById(2L)).thenReturn(Optional.of(other));
@@ -112,10 +105,8 @@ class FollowServiceTest {
     @DisplayName("팔로우하지 않은 사람을 언팔로우할 경우 예외가 발생한다.")
     void unfollowFailedDueToBadRequest() {
         // given
-        Member me = buildMember("me@example.com", "me");
-        Member other = buildMember("other@example.com", "other");
-        ReflectionTestUtils.setField(me, "id", 1L);
-        ReflectionTestUtils.setField(other, "id", 2L);
+        Member me = buildMember("me@example.com", "me", 1L);
+        Member other = buildMember("other@example.com", "other", 2L);
 
         when(memberRepository.findById(1L)).thenReturn(Optional.of(me));
         when(memberRepository.findById(2L)).thenReturn(Optional.of(other));
@@ -128,11 +119,13 @@ class FollowServiceTest {
     /**
      * 편의 메소드
      */
-    private Member buildMember(String email, String nickname) {
-        return Member.builder()
+    private Member buildMember(String email, String nickname, Long id) {
+        Member member = Member.builder()
                 .email(email)
                 .password("password1234")
                 .nickname(nickname)
                 .build();
+        ReflectionTestUtils.setField(member, "id", id);
+        return member;
     }
 }
