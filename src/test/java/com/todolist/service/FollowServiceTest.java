@@ -86,6 +86,46 @@ class FollowServiceTest {
     }
 
     /**
+     * 언팔로우 테스트
+     */
+    @Test
+    @DisplayName("다른 사람을 언팔로우할 수 있다.")
+    void unfollow() {
+        // given
+        Member me = buildMember("me@example.com", "me");
+        Member other = buildMember("other@example.com", "other");
+        ReflectionTestUtils.setField(me, "id", 1L);
+        ReflectionTestUtils.setField(other, "id", 2L);
+
+        when(memberRepository.findById(1L)).thenReturn(Optional.of(me));
+        when(memberRepository.findById(2L)).thenReturn(Optional.of(other));
+        when(followRepository.existsByFollowerAndFollowee(me, other)).thenReturn(true);
+
+        // when
+        followService.unfollow(me, 2L);
+
+        // then
+        verify(followRepository, times(1)).deleteByFollowerAndFollowee(me, other);
+    }
+
+    @Test
+    @DisplayName("팔로우하지 않은 사람을 언팔로우할 경우 예외가 발생한다.")
+    void unfollowFailedDueToBadRequest() {
+        // given
+        Member me = buildMember("me@example.com", "me");
+        Member other = buildMember("other@example.com", "other");
+        ReflectionTestUtils.setField(me, "id", 1L);
+        ReflectionTestUtils.setField(other, "id", 2L);
+
+        when(memberRepository.findById(1L)).thenReturn(Optional.of(me));
+        when(memberRepository.findById(2L)).thenReturn(Optional.of(other));
+        when(followRepository.existsByFollowerAndFollowee(me, other)).thenReturn(false);
+
+        // when & then
+        assertThrows(BadRequestException.class, () -> followService.unfollow(me, 2L));
+    }
+
+    /**
      * 편의 메소드
      */
     private Member buildMember(String email, String nickname) {
