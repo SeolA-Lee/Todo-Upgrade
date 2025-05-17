@@ -56,5 +56,12 @@ jobs:
             docker stop todo-update
             docker rm todo-update
             sudo docker pull ${{ secrets.DOCKER_REPO }}/todo-update
-            docker run -d --name goorm -p 8080:8080 ${{ secrets.DOCKER_REPO }}/todo-update
-            docker rmi -f $(docker images -f "dangling=true" -q)
+            docker run -d --name todo-update -p 8080:8080 ${{ secrets.DOCKER_REPO }}/todo-update
+
+#           dangling 이미지가 있을 때만 삭제
+            dangling=$(docker images -f "dangling=true" -q)
+            if [ -n "$dangling" ]; then
+              docker rmi -f $dangling
+            else
+              echo "No dangling images to remove."
+            fi
