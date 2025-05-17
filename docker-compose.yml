@@ -22,6 +22,8 @@ services:
   # Spring 설정
   myspring:
     build: .
+    env_file:
+      - .env
     expose:
       - 8080
     depends_on:

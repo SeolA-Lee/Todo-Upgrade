@@ -53,6 +53,10 @@ jobs:
           key: ${{ secrets.EC2_PRIVATE_KEY }}
           envs: GITHUB_SHA
           script: |
+            cd /home/ubuntu
+            sudo touch .env
+            echo "echo "${{ secrets.ENV_VARS }}" | sudo tee .env > /dev/null
+            
             docker stop todo-update
             docker rm todo-update
             sudo docker pull ${{ secrets.DOCKER_REPO }}/todo-update
