@@ -2,16 +2,16 @@ package com.todolist.entity;
 
 import com.todolist.entity.enums.TodoStatus;
 import jakarta.persistence.*;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Getter
-@NoArgsConstructor
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Todo {
 
     @Id
@@ -25,26 +25,29 @@ public class Todo {
     @Column(nullable = false)
     private String todoList;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TodoStatus status = TodoStatus.NOT_STARTED;
 
+    @Builder.Default
     @OneToMany(mappedBy = "todo", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private List<TodoDetail> todoDetail = new ArrayList<>();
 
-    @Builder
-    public Todo(Member member, String todoList, TodoStatus status) {
-        this.member = member;
-        this.todoList = todoList;
-        this.status = status;
-    }
+    @Builder.Default
+    @Column(nullable = false)
+    private Long hit = 0L;
 
     public void addTodoDetail(TodoDetail todoDetail) {
-        this.todoDetail = new ArrayList<>();
+        this.todoDetail.add(todoDetail);
         todoDetail.setTodo(this);
     }
 
     public void updateStatus(TodoStatus status) {
         this.status = status;
+    }
+
+    public void increaseHit() {
+        this.hit++;
     }
 }

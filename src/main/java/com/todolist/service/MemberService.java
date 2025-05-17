@@ -35,6 +35,7 @@ public class MemberService {
         Member member = Member.builder()
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
+                .nickname(request.nickname())
                 .build();
         memberRepository.save(member);
 
