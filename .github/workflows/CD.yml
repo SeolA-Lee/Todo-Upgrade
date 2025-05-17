@@ -57,8 +57,12 @@ jobs:
             sudo touch .env
             echo "${{ secrets.ENV_VARS }}" | sudo tee .env > /dev/null
 
-            docker stop todo-update
-            docker rm todo-update
+            sudo touch docker-compose.yaml
+            echo "${{ vars.DOCKER_COMPOSE }}" | sudo tee docker-compose.yaml > /dev/null
+
+            sudo chmod 666 /var/run/docker.sock
+            sudo docker rm -f $(docker ps -qa)
             sudo docker pull ${{ secrets.DOCKER_REPO }}/todo-update
-            docker run -d --name todo-update --env-file .env -p 8080:8080 ${{ secrets.DOCKER_REPO }}/todo-update
-            docker rmi -f $(docker images -f "dangling=true" -q)
+            sudo docker pull mysql:8.0
+            docker-compose -f docker-compose.yaml --env-file ./.env up -d
+            docker image prune -f
