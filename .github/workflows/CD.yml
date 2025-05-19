@@ -61,5 +61,5 @@ jobs:
             sudo docker rm -f $(docker ps -qa)
             sudo docker pull ${{ secrets.DOCKER_REPO }}/todo-update
             sudo docker pull mysql:8.0
-            docker-compose -f docker-compose.yaml --env-file ./.env up -d
+            docker-compose -f docker-compose.yml --env-file ./.env up -d
             docker image prune -f
